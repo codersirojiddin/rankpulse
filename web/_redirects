@@ -1,0 +1,7 @@
+# Cloudflare Pages picks up folder/index.html as a clean URL automatically
+# (e.g. web/dashboard/index.html -> /dashboard), so this file isn't strictly
+# required. It's included as a safety net in case you restructure later or
+# deploy behind a host that needs explicit rewrite rules.
+
+/dashboard  /dashboard/index.html  200
+/auth       /auth/index.html       200

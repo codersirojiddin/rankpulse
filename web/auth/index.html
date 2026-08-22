@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sign in — RankPulse</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
+<style>
+  body { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen">
+
+<!-- ============ CONFIG ============ -->
+<script>
+  // Keep these identical across index.html / auth/index.html / dashboard/index.html.
+  const SUPABASE_URL = "https://YOUR-PROJECT.supabase.co";
+  const SUPABASE_ANON_KEY = "YOUR-SUPABASE-ANON-KEY";
+  const API_BASE_URL = "https://your-api.onrender.com";
+
+  // Paddle Dashboard → Developer Tools → Authentication → Client-side token.
+  // This is safe to expose publicly (unlike your API key / webhook secret).
+  const PADDLE_CLIENT_TOKEN = "YOUR-PADDLE-CLIENT-SIDE-TOKEN";
+  const PADDLE_ENVIRONMENT = "sandbox"; // switch to "production" when you go live
+
+  // Your two real Paddle prices (from the product you created).
+  const PADDLE_PRICES = {
+    monthly: "pri_01m0mzncz5dj5p8p1w6v007k22", // $19/month
+    annual: "pri_01m0mzq2xbksz9xve6x71h05v7",  // $49/year
+  };
+
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  Paddle.Environment.set(PADDLE_ENVIRONMENT);
+  Paddle.Initialize({ token: PADDLE_CLIENT_TOKEN });
+</script>
+
+<div class="min-h-screen flex items-center justify-center px-4">
+  <div class="w-full max-w-sm">
+    <a href="/" class="flex items-center justify-center gap-2 mb-8">
+      <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
+        <span class="text-white font-bold text-sm">R</span>
+      </div>
+      <span class="text-xl font-semibold tracking-tight">RankPulse</span>
+    </a>
+
+    <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+      <div class="flex gap-1 mb-5 bg-slate-100 rounded-lg p-1">
+        <button id="tab-signin" class="flex-1 text-sm font-medium py-1.5 rounded-md bg-white shadow-sm">Sign in</button>
+        <button id="tab-signup" class="flex-1 text-sm font-medium py-1.5 rounded-md text-slate-500">Sign up</button>
+      </div>
+
+      <p id="plan-banner" class="hidden text-xs bg-indigo-50 text-indigo-700 rounded-lg px-3 py-2 mb-4"></p>
+
+      <form id="auth-form" class="space-y-3">
+        <input id="auth-email" type="email" required placeholder="you@example.com"
+          class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        <input id="auth-password" type="password" required placeholder="Password" minlength="6"
+          class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        <button type="submit" id="auth-submit"
+          class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-2 rounded-lg transition">
+          Sign in
+        </button>
+      </form>
+      <p id="auth-error" class="text-xs text-red-600 mt-3 hidden"></p>
+    </div>
+
+    <p class="text-center text-xs text-slate-400 mt-4">
+      <a href="/" class="hover:text-slate-600">&larr; Back to homepage</a>
+    </p>
+  </div>
+</div>
+
+<script>
+(() => {
+  let authMode = 'signin';
+
+  // If a plan was requested from the pricing section (e.g. /auth?plan=monthly),
+  // remember it so checkout can resume right after the user authenticates.
+  const params = new URLSearchParams(window.location.search);
+  const requestedPlan = params.get('plan'); // "monthly" | "annual" | null
+
+  if (requestedPlan && PADDLE_PRICES[requestedPlan]) {
+    const banner = document.getElementById('plan-banner');
+    banner.textContent = `Sign in or create an account to continue to checkout (${requestedPlan} plan).`;
+    banner.classList.remove('hidden');
+  }
+
+  // If already logged in, skip straight to checkout or the dashboard.
+  supabase.auth.getSession().then(({ data }) => {
+    if (data.session) continueAfterAuth(data.session);
+  });
+
+  document.getElementById('tab-signin').onclick = () => setAuthMode('signin');
+  document.getElementById('tab-signup').onclick = () => setAuthMode('signup');
+
+  function setAuthMode(mode) {
+    authMode = mode;
+    const isSignin = mode === 'signin';
+    document.getElementById('tab-signin').className = `flex-1 text-sm font-medium py-1.5 rounded-md ${isSignin ? 'bg-white shadow-sm' : 'text-slate-500'}`;
+    document.getElementById('tab-signup').className = `flex-1 text-sm font-medium py-1.5 rounded-md ${!isSignin ? 'bg-white shadow-sm' : 'text-slate-500'}`;
+    document.getElementById('auth-submit').textContent = isSignin ? 'Sign in' : 'Create account';
+  }
+
+  document.getElementById('auth-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('auth-email').value;
+    const password = document.getElementById('auth-password').value;
+    const errorEl = document.getElementById('auth-error');
+    errorEl.classList.add('hidden');
+
+    const { data, error } = authMode === 'signin'
+      ? await supabase.auth.signInWithPassword({ email, password })
+      : await supabase.auth.signUp({ email, password });
+
+    if (error) {
+      errorEl.textContent = error.message;
+      errorEl.classList.remove('hidden');
+      return;
+    }
+    if (authMode === 'signup' && !data.session) {
+      errorEl.textContent = 'Check your inbox to confirm your email, then sign in.';
+      errorEl.classList.remove('hidden');
+      return;
+    }
+    continueAfterAuth(data.session);
+  });
+
+  function continueAfterAuth(session) {
+    if (requestedPlan && PADDLE_PRICES[requestedPlan]) {
+      // Open Paddle checkout with the user's id attached as custom_data —
+      // this is what lets the Paddle webhook link the subscription back
+      // to the right row in public.users.
+      Paddle.Checkout.open({
+        items: [{ priceId: PADDLE_PRICES[requestedPlan], quantity: 1 }],
+        customer: { email: session.user.email },
+        customData: { user_id: session.user.id },
+        settings: {
+          successUrl: `${window.location.origin}/dashboard?checkout=success`,
+        },
+      });
+      // Send them to the dashboard either way — the webhook updates
+      // their subscription status asynchronously in the background.
+      window.location.href = '/dashboard';
+      return;
+    }
+    window.location.href = '/dashboard';
+  }
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RankPulse — Track your Google rankings without the $100/mo price tag</title>
+<meta name="description" content="RankPulse is a minimal keyword rank tracker for indie hackers and blog owners. Daily Google position tracking, starting at $19/mo." />
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; }
+</style>
+</head>
+<body class="bg-white text-slate-900">
+
+<!-- ============ CONFIG ============ -->
+<script>
+  // Keep these identical across index.html / auth/index.html / dashboard/index.html.
+  const SUPABASE_URL = "https://YOUR-PROJECT.supabase.co";
+  const SUPABASE_ANON_KEY = "YOUR-SUPABASE-ANON-KEY";
+
+  const supabase = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- ============ AUTH-AWARE REDIRECT ============ -->
+<!-- Logged-in visitors never see the marketing page — bounce them
+     straight to the dashboard. Everyone else sees the content below. -->
+<div id="landing-loading" class="min-h-screen flex items-center justify-center">
+  <p class="text-sm text-slate-400">Loading…</p>
+</div>
+
+<div id="landing-content" class="hidden">
+
+  <!-- ============ NAV ============ -->
+  <nav class="border-b border-slate-100">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center">
+          <span class="text-white font-bold text-xs">R</span>
+        </div>
+        <span class="font-semibold tracking-tight">RankPulse</span>
+      </div>
+      <div class="flex items-center gap-6">
+        <a href="#pricing" class="text-sm text-slate-600 hover:text-slate-900">Pricing</a>
+        <a href="/auth" class="text-sm text-slate-600 hover:text-slate-900">Sign in</a>
+        <a href="/auth" class="text-sm font-medium bg-slate-900 hover:bg-slate-800 text-white px-3.5 py-1.5 rounded-lg">
+          Get started
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ============ HERO ============ -->
+  <section class="max-w-4xl mx-auto px-6 pt-20 pb-16 text-center">
+    <h1 class="text-4xl sm:text-5xl font-semibold tracking-tight leading-tight">
+      Track your Google rankings<br class="hidden sm:block" />
+      without paying <span class="text-indigo-600">$100/mo</span>
+    </h1>
+    <p class="mt-5 text-lg text-slate-500 max-w-2xl mx-auto">
+      RankPulse checks your keyword positions every day and shows you exactly
+      what's moving — built for indie hackers and blog owners, not enterprise
+      marketing teams.
+    </p>
+    <div class="mt-8 flex items-center justify-center gap-3">
+      <a href="/auth?plan=monthly"
+        class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg">
+        Start tracking — $19/mo
+      </a>
+      <a href="#pricing" class="text-sm font-medium text-slate-600 hover:text-slate-900 px-5 py-2.5">
+        See pricing
+      </a>
+    </div>
+  </section>
+
+  <!-- ============ FEATURES ============ -->
+  <section class="max-w-5xl mx-auto px-6 py-14 grid grid-cols-1 sm:grid-cols-3 gap-8">
+    <div>
+      <div class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-semibold mb-3">1</div>
+      <h3 class="font-medium mb-1.5">Add your domain</h3>
+      <p class="text-sm text-slate-500">Create a project for each site you track, with a target country for localized results.</p>
+    </div>
+    <div>
+      <div class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-semibold mb-3">2</div>
+      <h3 class="font-medium mb-1.5">Track up to 20 keywords</h3>
+      <p class="text-sm text-slate-500">Add the search terms that matter — RankPulse checks their Google position automatically, every day.</p>
+    </div>
+    <div>
+      <div class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-semibold mb-3">3</div>
+      <h3 class="font-medium mb-1.5">Watch your progress</h3>
+      <p class="text-sm text-slate-500">See daily position changes at a glance, with a full history chart for every keyword.</p>
+    </div>
+  </section>
+
+  <!-- ============ PRICING ============ -->
+  <section id="pricing" class="max-w-4xl mx-auto px-6 py-16">
+    <div class="text-center mb-10">
+      <h2 class="text-2xl font-semibold tracking-tight">Simple pricing</h2>
+      <p class="text-sm text-slate-500 mt-2">No hidden tiers. Cancel anytime.</p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+      <!-- Monthly -->
+      <div class="border border-slate-200 rounded-xl p-6">
+        <h3 class="text-sm font-medium text-slate-500">Monthly</h3>
+        <div class="mt-2 flex items-baseline gap-1">
+          <span class="text-3xl font-semibold">$19</span>
+          <span class="text-sm text-slate-500">/month</span>
+        </div>
+        <ul class="mt-5 space-y-2 text-sm text-slate-600">
+          <li>✓ Up to 20 keywords per project</li>
+          <li>✓ Daily rank checks</li>
+          <li>✓ 90-day rank history</li>
+          <li>✓ Unlimited projects</li>
+        </ul>
+        <a href="/auth?plan=monthly"
+          class="mt-6 block text-center bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium py-2.5 rounded-lg">
+          Get started
+        </a>
+      </div>
+
+      <!-- Annual (highlighted) -->
+      <div class="border-2 border-indigo-600 rounded-xl p-6 relative">
+        <span class="absolute -top-3 left-6 bg-indigo-600 text-white text-xs font-medium px-2 py-0.5 rounded-full">
+          Save ~79%
+        </span>
+        <h3 class="text-sm font-medium text-slate-500">Annual</h3>
+        <div class="mt-2 flex items-baseline gap-1">
+          <span class="text-3xl font-semibold">$49</span>
+          <span class="text-sm text-slate-500">/year</span>
+        </div>
+        <ul class="mt-5 space-y-2 text-sm text-slate-600">
+          <li>✓ Up to 20 keywords per project</li>
+          <li>✓ Daily rank checks</li>
+          <li>✓ 90-day rank history</li>
+          <li>✓ Unlimited projects</li>
+        </ul>
+        <a href="/auth?plan=annual"
+          class="mt-6 block text-center bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-2.5 rounded-lg">
+          Get started
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="border-t border-slate-100">
+    <div class="max-w-6xl mx-auto px-6 py-8 flex items-center justify-between text-sm text-slate-400">
+      <span>&copy; <span id="year"></span> RankPulse</span>
+      <div class="flex items-center gap-2">
+        <div class="w-5 h-5 rounded bg-indigo-600 flex items-center justify-center">
+          <span class="text-white font-bold text-[10px]">R</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // Logged-in users skip the marketing page entirely.
+  supabase.auth.getSession().then(({ data }) => {
+    if (data.session) {
+      window.location.href = '/dashboard';
+      return;
+    }
+    document.getElementById('landing-loading').classList.add('hidden');
+    document.getElementById('landing-content').classList.remove('hidden');
+  });
+</script>
+
+</body>
+</html>

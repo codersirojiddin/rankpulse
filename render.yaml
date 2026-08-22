@@ -1,0 +1,41 @@
+# Render Blueprint — deploy both services with `render blueprint launch`
+# or by connecting this repo in the Render dashboard.
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: rankpulse-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile.api
+    plan: free
+    healthCheckPath: /healthz
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      - key: SERPER_API_KEY
+        sync: false
+      - key: PADDLE_WEBHOOK_SECRET
+        sync: false
+      - key: PADDLE_API_KEY
+        sync: false
+      - key: FRONTEND_ORIGIN
+        sync: false
+      - key: PORT
+        value: 8080
+
+  - type: worker
+    name: rankpulse-worker
+    runtime: docker
+    dockerfilePath: ./Dockerfile.worker
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      - key: SERPER_API_KEY
+        sync: false
+      - key: PADDLE_WEBHOOK_SECRET
+        sync: false
