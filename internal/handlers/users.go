@@ -1,5 +1,3 @@
-1. YANGI FAYL: internal/handlers/users.go
-
 
 
 package handlers
