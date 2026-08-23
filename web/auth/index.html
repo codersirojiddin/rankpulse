@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -20,15 +21,16 @@
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0ZmtkcWp4a25iYm13enpzYXV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODczOTk5MTgsImV4cCI6MjEwMjk3NTkxOH0.ZqOzIRtzoUt0KRm6RmM-k-KPq2fzsOv4jJhCpHHQytE";
   const API_BASE_URL = "https://rankpulse-api.onrender.com";
 
-  // Paddle Dashboard → Developer Tools → Authentication → Client-side token.
-  // This is safe to expose publicly (unlike your API key / webhook secret).
-  const PADDLE_CLIENT_TOKEN = "YOUR-PADDLE-CLIENT-SIDE-TOKEN";
+  // Sandbox client-side token — copy the FULL value from
+  // sandbox-vendors.paddle.com → Developer Tools → Authentication →
+  // Client-side tokens. Make sure nothing got cut off when copying.
+  const PADDLE_CLIENT_TOKEN = "test_17db5c08d1717e43cc0678eab87";
   const PADDLE_ENVIRONMENT = "sandbox"; // switch to "production" when you go live
 
-  // Your two real Paddle prices (from the product you created).
+  // Sandbox prices (from your sandbox product).
   const PADDLE_PRICES = {
-    monthly: "pri_01m0mzncz5dj5p8p1w6v007k22", // $19/month
-    annual: "pri_01m0mzq2xbksz9xve6x71h05v7",  // $49/year
+    monthly: "pri_01m0pzm16cf6k9gndrvzrqmtgw", // $19/month
+    annual: "pri_01m0pzndxhfg81wqkpg7y4q17j",  // $69/year
   };
 
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -175,3 +177,4 @@
 </script>
 
 </body>
+</html>
