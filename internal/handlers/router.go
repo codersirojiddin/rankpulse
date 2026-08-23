@@ -24,9 +24,12 @@ func NewRouter(pool *pgxpool.Pool, jwtSecret, paddleSecret string) http.Handler 
 
 	projectHandler := &ProjectHandler{DB: pool}
 	keywordHandler := &KeywordHandler{DB: pool}
+	userHandler := &UserHandler{DB: pool}
 
 	r.Group(func(r chi.Router) {
 		r.Use(auth.Middleware(jwtSecret))
+
+		r.Get("/me", userHandler.Me)
 
 		r.Route("/projects", func(r chi.Router) {
 			r.Get("/", projectHandler.List)
