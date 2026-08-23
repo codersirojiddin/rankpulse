@@ -9,7 +9,7 @@ import (
 
 type Config struct {
 	DatabaseURL         string // Supabase pooled connection string (pgbouncer, port 6543)
-	SupabaseJWTSecret   string
+	SupabaseURL         string // used to build the JWKS endpoint for JWT verification
 	SerperAPIKey        string
 	PaddleWebhookSecret string
 	PaddleAPIKey        string
@@ -23,7 +23,7 @@ type Config struct {
 func Load() *Config {
 	cfg := &Config{
 		DatabaseURL:         mustGet("DATABASE_URL"),
-		SupabaseJWTSecret:   mustGet("SUPABASE_JWT_SECRET"),
+		SupabaseURL:         mustGet("SUPABASE_URL"),
 		SerperAPIKey:        mustGet("SERPER_API_KEY"),
 		PaddleWebhookSecret: mustGet("PADDLE_WEBHOOK_SECRET"),
 		PaddleAPIKey:        os.Getenv("PADDLE_API_KEY"),
