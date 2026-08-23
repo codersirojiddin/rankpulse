@@ -1,8 +1,7 @@
-
-
 package handlers
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/jackc/pgx/v5"
@@ -33,6 +32,7 @@ func (h *UserHandler) Me(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
+		log.Printf("[users] /me query failed for user %s: %v", userID, err)
 		writeError(w, http.StatusInternalServerError, "db error")
 		return
 	}
