@@ -23,7 +23,7 @@
   // Paddle Dashboard → Developer Tools → Authentication → Client-side token.
   // This is safe to expose publicly (unlike your API key / webhook secret).
   const PADDLE_CLIENT_TOKEN = "YOUR-PADDLE-CLIENT-SIDE-TOKEN";
-  const PADDLE_ENVIRONMENT = "production"; // switch to "production" when you go live
+  const PADDLE_ENVIRONMENT = "sandbox"; // switch to "production" when you go live
 
   // Your two real Paddle prices (from the product you created).
   const PADDLE_PRICES = {
@@ -31,7 +31,9 @@
     annual: "pri_01m0mzq2xbksz9xve6x71h05v7",  // $49/year
   };
 
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // Named "sb" (not "supabase") to avoid colliding with the global
+  // identifier the supabase-js library itself registers on window.
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   Paddle.Environment.set(PADDLE_ENVIRONMENT);
   Paddle.Initialize({ token: PADDLE_CLIENT_TOKEN });
 </script>
@@ -88,7 +90,7 @@
   }
 
   // If already logged in, skip straight to checkout or the dashboard.
-  supabase.auth.getSession().then(({ data }) => {
+  sb.auth.getSession().then(({ data }) => {
     if (data.session) continueAfterAuth(data.session);
   });
 
@@ -111,8 +113,8 @@
     errorEl.classList.add('hidden');
 
     const { data, error } = authMode === 'signin'
-      ? await supabase.auth.signInWithPassword({ email, password })
-      : await supabase.auth.signUp({ email, password });
+      ? await sb.auth.signInWithPassword({ email, password })
+      : await sb.auth.signUp({ email, password });
 
     if (error) {
       errorEl.textContent = error.message;
