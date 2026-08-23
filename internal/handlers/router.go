@@ -11,7 +11,7 @@ import (
 
 // NewRouter wires every HTTP route for the RankPulse API. Kept in its
 // own function so cmd/api/main.go stays a thin bootstrapping layer.
-func NewRouter(pool *pgxpool.Pool, jwtSecret, paddleSecret string) http.Handler {
+func NewRouter(pool *pgxpool.Pool, supabaseURL, paddleSecret string) http.Handler {
 	r := chi.NewRouter()
 
 	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
@@ -27,7 +27,7 @@ func NewRouter(pool *pgxpool.Pool, jwtSecret, paddleSecret string) http.Handler 
 	userHandler := &UserHandler{DB: pool}
 
 	r.Group(func(r chi.Router) {
-		r.Use(auth.Middleware(jwtSecret))
+		r.Use(auth.Middleware(supabaseURL))
 
 		r.Get("/me", userHandler.Me)
 
