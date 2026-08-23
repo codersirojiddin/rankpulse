@@ -23,7 +23,9 @@
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0ZmtkcWp4a25iYm13enpzYXV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODczOTk5MTgsImV4cCI6MjEwMjk3NTkxOH0.ZqOzIRtzoUt0KRm6RmM-k-KPq2fzsOv4jJhCpHHQytE";
   const API_BASE_URL = "https://rankpulse-api.onrender.com";
 
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // Named "sb" (not "supabase") to avoid colliding with the global
+  // identifier the supabase-js library itself registers on window.
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 </script>
 
 <!-- ============ AUTH GUARD ============ -->
@@ -123,13 +125,13 @@
   // This is a protected route. No session → send the user to /auth.
   // Also re-run the guard on any auth state change (e.g. token expiry
   // or the user signing out in another tab).
-  supabase.auth.onAuthStateChange((_event, sess) => {
+  sb.auth.onAuthStateChange((_event, sess) => {
     if (!sess) {
       window.location.href = '/auth';
     }
   });
 
-  supabase.auth.getSession().then(({ data }) => {
+  sb.auth.getSession().then(({ data }) => {
     if (data.session) {
       onAuthed(data.session);
     } else {
@@ -138,7 +140,7 @@
   });
 
   document.getElementById('signout-btn').onclick = async () => {
-    await supabase.auth.signOut();
+    await sb.auth.signOut();
     window.location.href = '/';
   };
 
