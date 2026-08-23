@@ -13,14 +13,16 @@
 <body class="bg-white text-slate-900">
 
 <!-- ============ CONFIG ============ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   // Keep these identical across index.html / auth/index.html / dashboard/index.html.
   const SUPABASE_URL = "https://https://itfkdqjxknbbmwzzsaux.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0ZmtkcWp4a25iYm13enpzYXV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODczOTk5MTgsImV4cCI6MjEwMjk3NTkxOH0.ZqOzIRtzoUt0KRm6RmM-k-KPq2fzsOv4jJhCpHHQytE";
 
-  const supabase = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // Named "sb" (not "supabase") to avoid colliding with the global
+  // identifier the supabase-js library itself registers on window.
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <!-- ============ AUTH-AWARE REDIRECT ============ -->
 <!-- Logged-in visitors never see the marketing page — bounce them
@@ -160,7 +162,7 @@
   document.getElementById('year').textContent = new Date().getFullYear();
 
   // Logged-in users skip the marketing page entirely.
-  supabase.auth.getSession().then(({ data }) => {
+  sb.auth.getSession().then(({ data }) => {
     if (data.session) {
       window.location.href = '/dashboard';
       return;
