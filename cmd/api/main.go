@@ -27,7 +27,7 @@ func main() {
 	}
 	defer pool.Close()
 
-	router := handlers.NewRouter(pool, cfg.SupabaseJWTSecret, cfg.PaddleWebhookSecret)
+	router := handlers.NewRouter(pool, cfg.SupabaseURL, cfg.PaddleWebhookSecret)
 
 	// Wrap the chi router with global middleware (logging, recovery, CORS).
 	handler := withMiddleware(router, cfg.FrontendOrigin)
