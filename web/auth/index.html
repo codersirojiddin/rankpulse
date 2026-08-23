@@ -16,9 +16,9 @@
 <!-- ============ CONFIG ============ -->
 <script>
   // Keep these identical across index.html / auth/index.html / dashboard/index.html.
-  const SUPABASE_URL = "https://itfkdqjxknbbmwzzsaux.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0ZmtkcWp4a25iYm13enpzYXV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODczOTk5MTgsImV4cCI6MjEwMjk3NTkxOH0.ZqOzIRtzoUt0KRm6RmM-k-KPq2fzsOv4jJhCpHHQytE";
-  const API_BASE_URL = "https://rankpulse-api.onrender.com";
+  const SUPABASE_URL = "https://YOUR-PROJECT.supabase.co";
+  const SUPABASE_ANON_KEY = "YOUR-SUPABASE-ANON-KEY";
+  const API_BASE_URL = "https://your-api.onrender.com";
 
   // Paddle Dashboard → Developer Tools → Authentication → Client-side token.
   // This is safe to expose publicly (unlike your API key / webhook secret).
@@ -31,14 +31,28 @@
     annual: "pri_01m0mzq2xbksz9xve6x71h05v7",  // $49/year
   };
 
-  // Named "sb" (not "supabase") to avoid colliding with the global
-  // identifier the supabase-js library itself registers on window.
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
   Paddle.Environment.set(PADDLE_ENVIRONMENT);
-  Paddle.Initialize({ token: PADDLE_CLIENT_TOKEN });
+  Paddle.Initialize({
+    token: PADDLE_CLIENT_TOKEN,
+    // Only redirect once the checkout overlay itself is done — never
+    // navigate away while it's still open, or the overlay gets torn
+    // down mid-payment.
+    eventCallback: function (event) {
+      if (event.name === 'checkout.completed' || event.name === 'checkout.closed') {
+        window.location.href = '/dashboard';
+      }
+    },
+  });
 </script>
 
-<div class="min-h-screen flex items-center justify-center px-4">
+<!-- ============ LOADING (while we check for an existing session) ============ -->
+<div id="page-loading" class="min-h-screen flex items-center justify-center">
+  <p class="text-sm text-slate-400">Loading…</p>
+</div>
+
+<div id="auth-content" class="hidden min-h-screen flex items-center justify-center px-4">
   <div class="w-full max-w-sm">
     <a href="/" class="flex items-center justify-center gap-2 mb-8">
       <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
@@ -78,6 +92,9 @@
 (() => {
   let authMode = 'signin';
 
+  const pageLoading = document.getElementById('page-loading');
+  const authContent = document.getElementById('auth-content');
+
   // If a plan was requested from the pricing section (e.g. /auth?plan=monthly),
   // remember it so checkout can resume right after the user authenticates.
   const params = new URLSearchParams(window.location.search);
@@ -89,9 +106,15 @@
     banner.classList.remove('hidden');
   }
 
-  // If already logged in, skip straight to checkout or the dashboard.
+  // Check for an existing session before showing anything — avoids a
+  // flash of the sign-in form for users who are already logged in.
   sb.auth.getSession().then(({ data }) => {
-    if (data.session) continueAfterAuth(data.session);
+    if (data.session) {
+      continueAfterAuth(data.session);
+      return;
+    }
+    pageLoading.classList.add('hidden');
+    authContent.classList.remove('hidden');
   });
 
   document.getElementById('tab-signin').onclick = () => setAuthMode('signin');
@@ -131,20 +154,19 @@
 
   function continueAfterAuth(session) {
     if (requestedPlan && PADDLE_PRICES[requestedPlan]) {
-      // Open Paddle checkout with the user's id attached as custom_data —
-      // this is what lets the Paddle webhook link the subscription back
-      // to the right row in public.users.
+      // Keep the user on this page with the checkout overlay open —
+      // do NOT navigate away here. The eventCallback registered in
+      // Paddle.Initialize() above handles redirecting to /dashboard
+      // once the user completes or closes the checkout.
+      authContent.classList.add('hidden');
+      pageLoading.classList.remove('hidden');
+      pageLoading.querySelector('p').textContent = 'Opening checkout…';
+
       Paddle.Checkout.open({
         items: [{ priceId: PADDLE_PRICES[requestedPlan], quantity: 1 }],
         customer: { email: session.user.email },
         customData: { user_id: session.user.id },
-        settings: {
-          successUrl: `${window.location.origin}/dashboard?checkout=success`,
-        },
       });
-      // Send them to the dashboard either way — the webhook updates
-      // their subscription status asynchronously in the background.
-      window.location.href = '/dashboard';
       return;
     }
     window.location.href = '/dashboard';
@@ -153,4 +175,3 @@
 </script>
 
 </body>
-</html>
