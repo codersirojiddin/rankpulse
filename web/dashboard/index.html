@@ -35,24 +35,54 @@
   <p class="text-sm text-slate-400">Loading your dashboard…</p>
 </div>
 
-<!-- ============ DASHBOARD ============ -->
-<div id="dashboard-screen" class="hidden">
-  <nav class="border-b border-slate-200 bg-white">
-    <div class="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
-      <div class="flex items-center gap-2">
+<!-- ============ APP SHELL ============ -->
+<div id="dashboard-screen" class="hidden flex min-h-screen">
+
+  <!-- ---------- SIDEBAR ---------- -->
+  <aside class="w-60 shrink-0 bg-white border-r border-slate-200 flex flex-col">
+    <div class="px-5 py-4 border-b border-slate-100">
+      <a href="/" class="flex items-center gap-2">
         <div class="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center">
           <span class="text-white font-bold text-xs">R</span>
         </div>
         <span class="font-semibold tracking-tight">RankPulse</span>
-      </div>
-      <div class="flex items-center gap-4">
-        <span id="user-email" class="text-sm text-slate-500"></span>
-        <button id="signout-btn" class="text-sm text-slate-500 hover:text-slate-900">Sign out</button>
+      </a>
+    </div>
+
+    <nav class="flex-1 px-3 py-4 space-y-1">
+      <a href="/dashboard"
+        class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium bg-indigo-50 text-indigo-700">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18M9 17V9m4 8V5m4 12v-6" />
+        </svg>
+        Projects
+      </a>
+    </nav>
+
+    <!-- Subscription status card -->
+    <div class="px-3 pb-3">
+      <div id="subscription-card" class="rounded-lg border border-slate-200 p-3">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs font-medium text-slate-500">Plan</span>
+          <span id="sub-badge" class="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500">—</span>
+        </div>
+        <p id="sub-plan-label" class="text-sm font-medium text-slate-800">Loading…</p>
+        <a id="sub-upgrade-link" href="/auth?plan=monthly"
+          class="hidden mt-2 block text-center text-xs font-medium bg-indigo-600 hover:bg-indigo-700 text-white py-1.5 rounded-md">
+          Upgrade
+        </a>
       </div>
     </div>
-  </nav>
 
-  <main class="max-w-6xl mx-auto px-6 py-8">
+    <!-- User / sign out -->
+    <div class="px-5 py-4 border-t border-slate-100">
+      <p id="user-email" class="text-xs text-slate-500 truncate mb-2"></p>
+      <button id="signout-btn" class="text-xs text-slate-500 hover:text-slate-900">Sign out</button>
+    </div>
+  </aside>
+
+  <!-- ---------- MAIN CONTENT ---------- -->
+  <main class="flex-1 px-8 py-8 overflow-y-auto">
 
     <!-- Projects row -->
     <div class="flex items-center justify-between mb-4">
@@ -64,6 +94,9 @@
     </div>
 
     <div id="projects-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-8"></div>
+    <div id="projects-empty" class="hidden text-sm text-slate-400 mb-8">
+      No projects yet — create one to start tracking keywords.
+    </div>
 
     <!-- Active project panel -->
     <div id="project-panel" class="hidden">
@@ -148,8 +181,9 @@
     session = sess;
     authCheck.classList.add('hidden');
     dashboardScreen.classList.remove('hidden');
+    dashboardScreen.classList.add('flex');
     document.getElementById('user-email').textContent = session.user.email;
-    await loadProjects();
+    await Promise.all([loadProjects(), loadSubscription()]);
   }
 
   // ---------- API HELPER ----------
@@ -168,6 +202,39 @@
     return body;
   }
 
+  // ---------- SUBSCRIPTION ----------
+  async function loadSubscription() {
+    try {
+      const me = await api('/me');
+      renderSubscription(me);
+    } catch (err) {
+      // Non-fatal — the dashboard still works if this call fails,
+      // it just won't show plan details in the sidebar.
+      console.warn('Could not load subscription info:', err.message);
+    }
+  }
+
+  function renderSubscription(user) {
+    const badge = document.getElementById('sub-badge');
+    const label = document.getElementById('sub-plan-label');
+    const upgradeLink = document.getElementById('sub-upgrade-link');
+
+    const isActive = user.subscription_status === 'active';
+
+    badge.textContent = user.subscription_status || 'inactive';
+    badge.className = `text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+      isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+    }`;
+
+    if (isActive) {
+      label.textContent = user.plan_type === 'annual' ? 'Annual plan' : 'Monthly plan';
+      upgradeLink.classList.add('hidden');
+    } else {
+      label.textContent = 'No active plan';
+      upgradeLink.classList.remove('hidden');
+    }
+  }
+
   // ---------- PROJECTS ----------
   async function loadProjects() {
     projects = await api('/projects/');
@@ -176,7 +243,14 @@
 
   function renderProjects() {
     const list = document.getElementById('projects-list');
+    const empty = document.getElementById('projects-empty');
     list.innerHTML = '';
+
+    if (projects.length === 0) {
+      empty.classList.remove('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
 
     projects.forEach((p) => {
       const card = document.createElement('button');
