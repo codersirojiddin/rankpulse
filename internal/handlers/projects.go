@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strings"
 
@@ -44,6 +45,7 @@ func (h *ProjectHandler) Create(w http.ResponseWriter, r *http.Request) {
 	`, userID, normalizeDomain(req.Domain), req.TargetCountry).
 		Scan(&p.ID, &p.UserID, &p.Domain, &p.TargetCountry, &p.CreatedAt)
 	if err != nil {
+		log.Printf("[projects] create failed for user %s: %v", userID, err)
 		writeError(w, http.StatusInternalServerError, "could not create project")
 		return
 	}
@@ -70,6 +72,7 @@ func (h *ProjectHandler) List(w http.ResponseWriter, r *http.Request) {
 		order by p.created_at desc
 	`, userID)
 	if err != nil {
+		log.Printf("[projects] list query failed for user %s: %v", userID, err)
 		writeError(w, http.StatusInternalServerError, "db error")
 		return
 	}
@@ -104,6 +107,7 @@ func (h *ProjectHandler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
+		log.Printf("[projects] get query failed for user %s: %v", userID, err)
 		writeError(w, http.StatusInternalServerError, "db error")
 		return
 	}
@@ -120,6 +124,7 @@ func (h *ProjectHandler) Delete(w http.ResponseWriter, r *http.Request) {
 
 	tag, err := h.DB.Exec(ctx, `delete from projects where id = $1 and user_id = $2`, projectID, userID)
 	if err != nil {
+		log.Printf("[projects] delete failed for user %s: %v", userID, err)
 		writeError(w, http.StatusInternalServerError, "db error")
 		return
 	}
